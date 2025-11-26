@@ -23,11 +23,11 @@ keyboard.row_pins = (
 )
 
 keyboard.col_pins = (
-    board.GP22,  # col0
-    board.GP21,  # col1
-    board.GP20,  # col2
-    board.GP19,  # col3
-    board.GP18,  # col4
+    board.GP10,
+    board.GP11, 
+    board.GP12, 
+    board.GP13, 
+    board.GP14, 
 )
 
 keyboard.diode_orientation = DiodeOrientation.COL2ROW

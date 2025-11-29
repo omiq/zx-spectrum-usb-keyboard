@@ -1,6 +1,14 @@
-## Circuitpython code for the ZX Spectrum+ and eventually the **Grey** ZX Spectrum 128+2 keyboard (not the A or B versions!)
+# Circuitpython code for the ZX Spectrum+ and eventually the **Grey** ZX Spectrum 128+2 keyboard (not the A or B versions!)
 
 (Now just uses Adafruit HID libraries, no need for KMK)
+
+If you are going to modify the code or use KMK, look out for bounces and ghost presses
+
+* Uses 8 pins for rows, 5 for columns
+* * Row pins: board.GP2-GP9
+* * Col pins: board.GP10-GP14
+* Scanning needs to be slower than you would expect!
+
 
 ![Pi and Spectrum Connected](pi_spectrum_connected.JPG)
 

@@ -2,6 +2,8 @@
 
 (Now just uses Adafruit HID libraries, no need for KMK)
 
+![Pi and Spectrum Connected](pi_spectrum_connected.JPG)
+
 ```
 import time
 import board

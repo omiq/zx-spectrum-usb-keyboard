@@ -34,13 +34,13 @@ SPECTRUM_KEY_NAMES = [
 # CAPS SHIFT combinations (CAPS SHIFT + key = Spectrum key)
 # Matrix indices: CAPS SHIFT is at index 25 (row 5, col 0)
 CAPS_SHIFT_COMBOS = {
-    (25, 0): "!",      # CAPS SHIFT + 1
+    (25, 0): "EDIT",      # CAPS SHIFT + 1
     (25, 1): '"',      # CAPS SHIFT + 2
-    (25, 2): "#",      # CAPS SHIFT + 3
-    (25, 3): "$",      # CAPS SHIFT + 4
+    (25, 2): "TRUE VIDEO",      # CAPS SHIFT + 3
+    (25, 3): "INV VIDEO",      # CAPS SHIFT + 4
     (25, 4): "CURSOR LEFT",  # CAPS SHIFT + 5
-    (25, 15): "TRUE VIDEO",  # CAPS SHIFT + 0
-    (25, 16): "DELETE",      # CAPS SHIFT + 9
+    (25, 15): "DELETE",  # CAPS SHIFT + 0
+    (25, 16): "GRAPH",      # CAPS SHIFT + 9
     (25, 17): "CURSOR RIGHT",   # CAPS SHIFT + 8
     (25, 18): "CURSOR UP", # CAPS SHIFT + 7
     (25, 19): "CURSOR DOWN", # CAPS SHIFT + 6
@@ -88,8 +88,8 @@ SYMBOL_SHIFT_COMBOS = {
     (36, 17): "*",     # SYMBOL SHIFT + 8
     (36, 18): "&",     # SYMBOL SHIFT + 7
     (36, 19): "^",     # SYMBOL SHIFT + 6
-    (36, 20): "P",     # SYMBOL SHIFT + P (already P)
-    (36, 21): "O",     # SYMBOL SHIFT + O (already O)
+    (36, 20): '"',     # SYMBOL SHIFT + P (already P)
+    (36, 21): ";",     # SYMBOL SHIFT + O (already O)
     (36, 22): "I",     # SYMBOL SHIFT + I (already I)
     (36, 23): "U",     # SYMBOL SHIFT + U (already U)
     (36, 24): "Y",     # SYMBOL SHIFT + Y (already Y)
@@ -385,36 +385,9 @@ while True:
                     print(f"Key pressed: {spectrum_name} ({pc_name_str})")
                     last_reported_key = current_combo
                 elif len(currently_pressed) == 1:
-                    # Single modifier held - check if we should report it now
-                    idx = currently_pressed[0]
-                    caps_shift_idx = 25
-                    symbol_shift_idx = 36
-                    if idx == caps_shift_idx or idx == symbol_shift_idx:
-                        # Check if enough time has passed since modifier was pressed
-                        # (give time for combo key to arrive)
-                        current_time = time.monotonic()
-                        if idx in modifier_press_time:
-                            time_since_press = current_time - modifier_press_time[idx]
-                            # Wait 0.01 seconds (2 scan cycles) before reporting modifier alone
-                            if time_since_press >= 0.01:
-                                keycode = current_mode[idx]
-                                pc_name = None
-                                if hasattr(keycode, 'name'):
-                                    pc_name = keycode.name
-                                if not pc_name:
-                                    keycode_value = int(keycode) if hasattr(keycode, '__int__') else keycode
-                                    for attr_name in dir(Keycode):
-                                        if not attr_name.startswith('_'):
-                                            attr_value = getattr(Keycode, attr_name)
-                                            if isinstance(attr_value, int) and attr_value == keycode_value:
-                                                pc_name = attr_name
-                                                break
-                                    if not pc_name:
-                                        pc_name = f"KEYCODE_{keycode_value}"
-                                print(f"Key pressed: {SPECTRUM_KEY_NAMES[idx]} ({pc_name})")
-                                last_reported_key = current_combo
-                                # Remove from tracking
-                                del modifier_press_time[idx]
+                    # Single modifier held - don't report modifiers alone
+                    # They should only be reported as part of combinations
+                    pass
     
     # Clean up modifier tracking for released keys
     for idx in list(modifier_press_time.keys()):

@@ -109,6 +109,34 @@ SYMBOL_SHIFT_COMBOS = {
     (36, 39): ">",     # SYMBOL SHIFT + B
 }
 
+# Map Spectrum special keys to their HID keycodes
+# These override the default keycode mapping for special keys
+SPECIAL_KEY_HID_MAP = {
+    "CURSOR LEFT": Keycode.LEFT_ARROW,
+    "CURSOR RIGHT": Keycode.RIGHT_ARROW,
+    "CURSOR UP": Keycode.UP_ARROW,
+    "CURSOR DOWN": Keycode.DOWN_ARROW,
+    "DELETE": Keycode.DELETE,
+    "BREAK": Keycode.ESCAPE,  # BREAK is typically ESC on modern keyboards
+    "EDIT": Keycode.INSERT,   # EDIT is typically INSERT
+    "TRUE VIDEO": None,  # No direct HID equivalent, keep as modifier combo
+    "INV VIDEO": None,   # No direct HID equivalent, keep as modifier combo
+    "GRAPH": None,       # No direct HID equivalent, keep as modifier combo
+    "EXTEND MODE": None, # No direct HID equivalent, keep as modifier combo
+}
+
+# Keys that should swap modifiers when sending to USB HID
+# Format: (modifier_idx, other_idx): True means swap the modifiers
+# This swaps which modifier keycode is sent, but keeps Spectrum key name the same
+SWAP_MODIFIERS = {
+    (25, 1): True,   # CAPS SHIFT + 2 (") should send SYMBOL SHIFT keycode
+    (25, 2): True,   # CAPS SHIFT + 3 (TRUE VIDEO) should send SYMBOL SHIFT keycode
+    (25, 3): True,   # CAPS SHIFT + 4 (INV VIDEO) should send SYMBOL SHIFT keycode
+    (36, 3): True,   # SYMBOL SHIFT + 4 ($) should send CAPS SHIFT keycode
+    (36, 1): True,   # SYMBOL SHIFT + 2 (") should send CAPS SHIFT keycode
+    # Add more mappings here as needed
+}
+
 def get_spectrum_key_name(pressed_indices):
     """Get the Spectrum key name for a combination of pressed keys."""
     if len(pressed_indices) == 0:
@@ -258,14 +286,104 @@ while True:
     for idx in range(matrix.key_count):
         if pressed[idx] and not prev[idx]:
             newly_pressed.append(idx)
+            
+            # Get the Spectrum key name for this combination to check for special keys
+            combo_indices = currently_pressed[:]
+            spectrum_name = get_spectrum_key_name(combo_indices)
+            
+            # Check if this is a special key that has a direct HID mapping
+            if spectrum_name and spectrum_name in SPECIAL_KEY_HID_MAP:
+                special_keycode = SPECIAL_KEY_HID_MAP[spectrum_name]
+                if special_keycode is not None:
+                    # Send the special HID keycode directly
+                    keyboard.press(special_keycode)
+                    continue  # Skip normal keycode handling
+            
+            # Normal keycode handling with modifier swapping
             keycode = current_mode[idx]
+            caps_shift_idx = 25
+            symbol_shift_idx = 36
+            
+            # Check if we have a modifier combination that needs swapping
+            if idx == caps_shift_idx:
+                # CAPS SHIFT pressed - check if combo needs swap
+                for other_idx in currently_pressed:
+                    if other_idx != idx:
+                        combo_key = (idx, other_idx)
+                        if combo_key in SWAP_MODIFIERS:
+                            # Swap: send SYMBOL SHIFT keycode instead
+                            keycode = current_mode[symbol_shift_idx]
+                            break
+            elif idx == symbol_shift_idx:
+                # SYMBOL SHIFT pressed - check if combo needs swap
+                for other_idx in currently_pressed:
+                    if other_idx != idx:
+                        combo_key = (idx, other_idx)
+                        if combo_key in SWAP_MODIFIERS:
+                            # Swap: send CAPS SHIFT keycode instead
+                            keycode = current_mode[caps_shift_idx]
+                            break
+            else:
+                # Regular key pressed - check if modifier combo needs swap
+                if caps_shift_idx in currently_pressed:
+                    combo_key = (caps_shift_idx, idx)
+                    if combo_key in SWAP_MODIFIERS:
+                        # Send SYMBOL SHIFT keycode instead of CAPS SHIFT
+                        keyboard.press(current_mode[symbol_shift_idx])
+                        keycode = current_mode[idx]
+                elif symbol_shift_idx in currently_pressed:
+                    combo_key = (symbol_shift_idx, idx)
+                    if combo_key in SWAP_MODIFIERS:
+                        # Send CAPS SHIFT keycode instead of SYMBOL SHIFT
+                        keyboard.press(current_mode[caps_shift_idx])
+                        keycode = current_mode[idx]
+            
             keyboard.press(keycode)
     
-    # Handle key releases first
+    # Handle key releases - need to check for special keys and swapped modifiers
     for idx in range(matrix.key_count):
         if prev[idx] and not pressed[idx]:
+            # Check if this was a special key combination
+            prev_pressed = []
+            for i in range(matrix.key_count):
+                if prev[i]:
+                    prev_pressed.append(i)
+            
+            prev_spectrum_name = get_spectrum_key_name(prev_pressed)
+            if prev_spectrum_name and prev_spectrum_name in SPECIAL_KEY_HID_MAP:
+                special_keycode = SPECIAL_KEY_HID_MAP[prev_spectrum_name]
+                if special_keycode is not None:
+                    # Release the special HID keycode
+                    keyboard.release(special_keycode)
+                    continue  # Skip normal keycode handling
+            
+            # Normal keycode release handling with modifier swapping
             keycode = current_mode[idx]
-            keyboard.release(keycode)
+            caps_shift_idx = 25
+            symbol_shift_idx = 36
+            
+            # Check if this was part of a swapped modifier combination
+            if idx == caps_shift_idx:
+                # Check if we need to release swapped modifier
+                for other_idx in range(matrix.key_count):
+                    if prev[other_idx] and other_idx != idx:
+                        combo_key = (idx, other_idx)
+                        if combo_key in SWAP_MODIFIERS:
+                            keyboard.release(current_mode[symbol_shift_idx])
+                            keycode = None  # Don't release the original
+                            break
+            elif idx == symbol_shift_idx:
+                # Check if we need to release swapped modifier
+                for other_idx in range(matrix.key_count):
+                    if prev[other_idx] and other_idx != idx:
+                        combo_key = (idx, other_idx)
+                        if combo_key in SWAP_MODIFIERS:
+                            keyboard.release(current_mode[caps_shift_idx])
+                            keycode = None  # Don't release the original
+                            break
+            
+            if keycode is not None:
+                keyboard.release(keycode)
             # Reset reported key when all keys are released
             if len([i for i in range(matrix.key_count) if pressed[i]]) == 0:
                 last_reported_key = None

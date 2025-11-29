@@ -5,8 +5,8 @@
 If you are going to modify the code or use KMK, look out for bounces and ghost presses
 
 * Uses 8 pins for rows, 5 for columns
-* * Row pins: board.GP2-GP9
-* * Col pins: board.GP10-GP14
+  * Row pins: board.GP2-GP9
+  * Col pins: board.GP10-GP14
 * Scanning needs to be slower than you would expect!
 
 

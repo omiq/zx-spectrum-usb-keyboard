@@ -116,13 +116,13 @@ SPECIAL_KEY_HID_MAP = {
     "CURSOR RIGHT": Keycode.RIGHT_ARROW,
     "CURSOR UP": Keycode.UP_ARROW,
     "CURSOR DOWN": Keycode.DOWN_ARROW,
-    "DELETE": Keycode.DELETE,
+    "DELETE": Keycode.BACKSPACE,
     "BREAK": Keycode.ESCAPE,  # BREAK is typically ESC on modern keyboards
     "EDIT": Keycode.INSERT,   # EDIT is typically INSERT
     "TRUE VIDEO": None,  # No direct HID equivalent, keep as modifier combo
     "INV VIDEO": None,   # No direct HID equivalent, keep as modifier combo
     "GRAPH": None,       # No direct HID equivalent, keep as modifier combo
-    "EXTEND MODE": None, # No direct HID equivalent, keep as modifier combo
+    "EXTEND MODE": Keycode.TAB, # No direct HID equivalent, keep as modifier combo
 }
 
 # Keys that should swap modifiers when sending to USB HID

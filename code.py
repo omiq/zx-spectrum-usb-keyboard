@@ -58,8 +58,8 @@ CAPS_SHIFT_COMBOS = {
     (25, 32): "K",     # CAPS SHIFT + K (already K)
     (25, 33): "J",     # CAPS SHIFT + J (already J)
     (25, 34): "H",     # CAPS SHIFT + H (already H)
-    (25, 35): "SPACE", # CAPS SHIFT + SPACE (already SPACE)
-    (25, 36): "SYMBOL SHIFT", # CAPS SHIFT + SYMBOL SHIFT
+    (25, 35): "BREAK", # CAPS SHIFT + SPACE
+    (25, 36): "EXTEND MODE", # CAPS SHIFT + SYMBOL SHIFT
     (25, 37): "M",     # CAPS SHIFT + M (already M)
     (25, 38): "N",     # CAPS SHIFT + N (already N)
     (25, 39): "B",     # CAPS SHIFT + B (already B)
@@ -211,29 +211,38 @@ matrix = SpectrumMatrix(
         board.GP13,
         board.GP14,
     ),
-    settle_us=2000  # Increased to 2000us (2ms) to allow better detection of simultaneous key presses
+    settle_us=1200  # Settle time - increased for more reliable sampling
 )
 
 prev = [0] * matrix.key_count
 last_reported_key = None
 modifier_press_time = {}  # Track when modifiers were pressed to allow combo detection
 
+# Buffer to track key states over multiple iterations for more reliable detection
+key_state_buffer = []  # List of recent scan results
+BUFFER_SIZE = 4  # Number of iterations to buffer (increased for more reliable detection)
+
 current_mode = pc_mode   # default
 print("Starting")
 while True:
-    # Always do multiple scans and merge results to catch simultaneous key presses
-    # This is especially important for physical keys that press two keys at once
+    # Scan the matrix
     pressed = matrix.scan()
     
-    # Do 3 additional scans and merge all results (OR operation)
-    # This helps catch keys that might be missed in a single scan due to timing
-    for scan_attempt in range(3):
-        time.sleep(0.005)  # 5ms delay between scans to allow signals to stabilize
-        pressed2 = matrix.scan()
-        # Merge: if any scan detected a key, consider it pressed
+    # Add current scan to buffer
+    key_state_buffer.append(pressed[:])
+    if len(key_state_buffer) > BUFFER_SIZE:
+        key_state_buffer.pop(0)
+    
+    # Use merged state from buffer - if a key is pressed in ANY of the recent scans, consider it pressed
+    # This helps catch keys that might be missed in a single scan
+    merged_pressed = [0] * matrix.key_count
+    for buffered_state in key_state_buffer:
         for idx in range(matrix.key_count):
-            if pressed2[idx]:
-                pressed[idx] = 1
+            if buffered_state[idx]:
+                merged_pressed[idx] = 1
+    
+    # Use merged state for processing
+    pressed = merged_pressed
 
     # Track currently pressed keys
     currently_pressed = []

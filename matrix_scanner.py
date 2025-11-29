@@ -30,8 +30,18 @@ class SpectrumMatrix:
             c_pin.value = False
             time.sleep(self.settle)
 
+            # Sample each row pin multiple times for more reliable detection
+            # Require the pin to be low in multiple samples to confirm a key press
             for r_index, r_pin in enumerate(self.rows):
-                if not r_pin.value:
+                # Sample the pin multiple times
+                samples = []
+                for _ in range(5):  # Sample 5 times
+                    samples.append(not r_pin.value)
+                    time.sleep(0.0001)  # 100us between samples
+                
+                # Require at least 3 out of 5 samples to be low to confirm key press
+                # This helps filter out noise and ensures reliable detection
+                if sum(samples) >= 3:
                     result[r_index * self.col_count + c_index] = 1
 
             c_pin.direction = digitalio.Direction.INPUT

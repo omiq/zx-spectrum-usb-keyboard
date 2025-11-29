@@ -41,9 +41,9 @@ CAPS_SHIFT_COMBOS = {
     (25, 4): "CURSOR LEFT",  # CAPS SHIFT + 5
     (25, 15): "TRUE VIDEO",  # CAPS SHIFT + 0
     (25, 16): "DELETE",      # CAPS SHIFT + 9
-    (25, 17): "CURSOR UP",   # CAPS SHIFT + 8
-    (25, 18): "CURSOR DOWN", # CAPS SHIFT + 7
-    (25, 19): "CURSOR RIGHT", # CAPS SHIFT + 6
+    (25, 17): "CURSOR RIGHT",   # CAPS SHIFT + 8
+    (25, 18): "CURSOR UP", # CAPS SHIFT + 7
+    (25, 19): "CURSOR DOWN", # CAPS SHIFT + 6
     (25, 20): "P",     # CAPS SHIFT + P (already P)
     (25, 21): "O",     # CAPS SHIFT + O (already O)
     (25, 22): "I",     # CAPS SHIFT + I (already I)
@@ -125,7 +125,8 @@ def get_spectrum_key_name(pressed_indices):
     if caps_shift_idx in pressed_indices:
         for other_idx in pressed_indices:
             if other_idx != caps_shift_idx:
-                combo_key = tuple(sorted([caps_shift_idx, other_idx]))
+                # Dictionary keys are (25, other_idx) format
+                combo_key = (caps_shift_idx, other_idx)
                 if combo_key in CAPS_SHIFT_COMBOS:
                     return CAPS_SHIFT_COMBOS[combo_key]
                 # If not in combo map, show as CAPS SHIFT + key
@@ -137,7 +138,8 @@ def get_spectrum_key_name(pressed_indices):
     if symbol_shift_idx in pressed_indices:
         for other_idx in pressed_indices:
             if other_idx != symbol_shift_idx:
-                combo_key = tuple(sorted([symbol_shift_idx, other_idx]))
+                # Dictionary keys are (36, other_idx) format
+                combo_key = (symbol_shift_idx, other_idx)
                 if combo_key in SYMBOL_SHIFT_COMBOS:
                     return SYMBOL_SHIFT_COMBOS[combo_key]
                 # If not in combo map, show as SYMBOL SHIFT + key
